@@ -177,15 +177,84 @@ This time the model detected some of the larger vehicles in the same example ima
 ![](/experiments/experiment0/Example.png "")
 
 ### Experiment1: add augmentations to improve on experiment0
-* random horizontal flip is alread applied
-* random crop is already applied
-* [this](https://towardsdatascience.com/when-conventional-wisdom-fails-revisiting-data-augmentation-for-self-driving-cars-4831998c5509) article also references hue jitter
-* [](https://blog.roboflow.com/detect-small-objects/) cutout
-* increase image size to effectively 'dedicate more pixels' to small objects
+Both the reference experiment and experiment0 already included the following two augmentations: (1) random horizontal flip, and (2) random crop. After review of [this](https://towardsdatascience.com/when-conventional-wisdom-fails-revisiting-data-augmentation-for-self-driving-cars-4831998c5509) article two more augmentations were added to improve the ability of the model to generalize:
+* hue jitter was added to help the model generalize over colors (especially vehicles can have many different colors)
+* random black patches were added to increase the (simulated) presence of obstructions that partially block objects
+```
+  data_augmentation_options {
+    random_horizontal_flip {
+    }
+  }
+  data_augmentation_options {
+    random_crop_image {
+      min_object_covered: 0.0
+      min_aspect_ratio: 0.75
+      max_aspect_ratio: 3.0
+      min_area: 0.75
+      max_area: 1.0
+      overlap_thresh: 0.0
+    }
+  }
+  data_augmentation_options {
+    random_black_patches {
+      probability: 1
+    }
+  }
+  data_augmentation_options {
+    random_adjust_hue {
+      max_delta: 0.5
+    }
+  }
+```
 
-*Loss function*
 
-*Metrics*
+*Loss function - 4 augmentations*
+```
+Loss/localization_loss:                0.480923
+Loss/classification_loss:              0.328709
+Loss/regularization_loss:              0.261731
+Loss/total_loss:                       1.071363
+```
+
+*Metrics - 4 augmentations*
+```
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.066
+Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.121
+Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.066
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.018
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.249
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.303
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.014
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.067
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.102
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.054
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.294
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.373
+```
+
+*Loss function - 2 augmentations*
+```
+Loss/localization_loss:                0.616697
+Loss/classification_loss:              0.915548
+Loss/regularization_loss:              0.299592
+Loss/total_loss:                       1.831837
+```
+
+*Metrics - 2 augmentations*
+```
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.010
+Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.027
+Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.005
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.002
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.071
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.039
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.006
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.023
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.051
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.024
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.168
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.185
+```
 
 *Example*
 
