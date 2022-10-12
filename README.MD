@@ -1,13 +1,15 @@
 # computer_vision
 
 ## Project overview
-Per the project introduction "objective of this project is to create a convolutional neural network to detect and classify objects using data from Waymo". Objects to be detected and classified include vehicles, pedestrians and cyclists (either stationary, or moving) in different types of urban environments. An autonomous vehicle needs to be aware of the pose, velocity and heading of different types of dynamic agents to ensure safe operation in the presence of dynamic agents. More specifically, to ensure safe operation an autonomous vehicle will need to adapt its own behavior (pose, velocity and heading) in response to the current state (but also considering possible future states) of these dynamic agents. 
+Per the project introduction "objective of this project is to create a convolutional neural network to detect and classify objects using data from Waymo". Objects to be detected and classified include vehicles, pedestrians and cyclists (either stationary, or moving) in different types of urban environments. An autonomous vehicle needs to be aware of the pose, velocity and heading of different types of dynamic agents (as well as its own) to ensure safe operation in the presence of dynamic agents. More specifically, to ensure safe operation an autonomous vehicle will need to adapt its own behavior (pose, velocity and heading) in response to the current state (but also considering possible future states) of these dynamic agents. 
 
 ## Set up
 All code for this project can be downloaded from github using "git clone https://github.com/alexheijnen1980/computer_vision.git". All dependencies required to run the code in the two Jupyter Notebooks are listed in the included requirements.txt file. The workflow below should suffice to install these dependencies (on a windows machine, different commands are used to create and activate a virtual environment on MacOS):
-* create virtual environment: python -m venv venv
-* activate virtual environment: ./venv/Scripts/Activate.ps1
-* download and install dependencies: pip install -r requirements.txt
+```
+create virtual environment: python -m venv venv
+activate virtual environment: ./venv/Scripts/Activate.ps1
+download and install dependencies: pip install -r requirements.txt
+```
 
 Additionally, given github limits on file size, the repository does not all code to create inferences using the models referenced below. That being said, the pipeline_new.config files used to train the different models are included in the different subsfolders in the /experiments folder.
 
@@ -28,9 +30,9 @@ Review of one image from each of the tensorflow records indicates a large variab
 ![](/images/environmental.png "variability in environmental conditions")
 
 *Quantitative Analysis*  
-Quantitative analysis confirmed some of the observations made as part of the qualitative analysis. Different images show a large variability in the number of dynamic agents. Furthermore, the median number of vehicles is far larger than the medium number of pedestrians and cyclists. The boxplot below shows variability - across 100 images per tensorflow record - in number of bounding boxes corresponding to each of the three types of dynamic agents. Large differences exist in the median number of vehicles (15), pedestrians (1) and cyclists (0)
-![](/images/agent_boxplot.png "variability in number of agents per image")
-Next, the bar chart below shows the frequency of bounding boxes (dynamic agents) grouped according to location of the center of the bounding box (mapped to one of the four quadrants of the image). The print out expresses similar information in percentages, that are further split by dynamic agent type. Almost 60% of bounding boxes have a center in the bottom half of the image and designate the presence of a vehicle.   
+Quantitative analysis confirmed some of the observations made during the qualitative analysis. Different images show a large variability in the number of dynamic agents. Furthermore, the median number of vehicles is far larger than the median number of pedestrians and cyclists. The boxplot below shows variability - across 100 images per tensorflow record - in number of bounding boxes corresponding to each of the three types of dynamic agents. Large differences exist in the median number of vehicles (15), pedestrians (1) and cyclists (0)
+![](/images/agent_boxplot.png "variability in number of agents per image")  
+Next, the bar chart below shows the frequency of bounding boxes (dynamic agents) grouped according to location of the center of the bounding box (mapped to one of the four quadrants of the image). The print out expresses similar information in percentages that are further split up by dynamic agent type. Almost 60% of bounding boxes have a center in the bottom half of the image and designate the presence of a vehicle. This is likely due to the fact that often  (a portion of) the top half of the image is taken up by the horizon. 
 ![](/images/location.png "variability in location of bounding box center")
 ```
 Percentage of bounding boxes grouped by class and center location: 
@@ -53,53 +55,107 @@ vehicle     bottom left     35.409997
 Given that more than 10,000 images are available across all tensorflow records, 90% of the tensorflow records are assigned to the training set and 'only' 10% of the tensorflow records are assigned to the valiation set (rather than the 80/20% rule of thumb). Furthermore, the training set and the validation set are split at the level of tensorflow records (trip id), rather than at the level of images. A tensorflow record is only part of the training set, or the validation set, never of both. This is done to prevent too much similarity between the training set and the validation set.
 
 ## Training
-### Reference experiment
-_This section should detail the results of the reference experiment. It should includes training metrics and a detailed explanation of the algorithm's performances._
+### Reference experiment  
+The first experiment was performed without making any modifications to the pipeline_new.config file. Some relevant sections from the pipeline_new.config file are copied below for reference.
+```
+train_config {
+  batch_size: 2
+  data_augmentation_options {
+    random_horizontal_flip {
+    }
+  }
+  data_augmentation_options {
+    random_crop_image {
+      min_object_covered: 0.0
+      min_aspect_ratio: 0.75
+      max_aspect_ratio: 3.0
+      min_area: 0.75
+      max_area: 1.0
+      overlap_thresh: 0.0
+    }
+  }
+  sync_replicas: true
+  optimizer {
+    momentum_optimizer {
+      learning_rate {
+        cosine_decay_learning_rate {
+          learning_rate_base: 0.04
+          total_steps: 2500
+          warmup_learning_rate: 0.013333
+          warmup_steps: 200
+        }
+      }
+      momentum_optimizer_value: 0.9
+    }
+    use_moving_average: false
+}
+``` 
 
+*Loss function*  
+After improving in the first 600 steps, the improvement in total loss slows down and starts to plateau. Per lesson 4 section 21 on visualizing the loss function, this type of curve is indicative of a learning rate that is too high, potentially resulting in an inability to find the global minimum (rather than a local minimum).
+```
+Loss/localization_loss:                 0.957403
+Loss/classification_loss:               0.716043
+Loss/regularization_loss:              19.057518
+Loss/total_loss:                       20.730965
+```    
+![](/experiments/reference/Loss_and_learning_rate.png "")  
+
+*Metrics*  
+Independent of the root cause, the evaluation output below indicates that model performance is not good. Even at an Intersection over Union value of 0.50, all but one of the average precision and average recall values is below 0.01. 
 ```
 Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.000
 Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.001
 Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.000
 Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
 Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.004
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.003
 Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.000
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.002
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.008
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.001
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.007
 Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.164
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.005
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.131
 ```
-Eval metrics at step 2500
+
+*Example*  
+Although only a single image, the example below indicates that - in conditions that were confirmed to be present in the training data - the model did not detect any vehicles. This is further confirmation of the poor performance of the model. Final confirmation of the lack of utility of the model came in the form of the complete lack of detections in (animations of) the three records in the test directory. These animations could not be uploaded to Github due to their size. 
+
+![](/experiments/reference/Example.png "")
+
+*Other observations*  
+Finally, while rerunning the training process (using the same training data and pipeline_new.config file) consistently resulted in a model with extremely poor performance, loss values (and metrics) did vary. The regulatorization and total loss values below are much lower than the values presented above. I assume this is an artifact of a stochastic element in the training process. 
 ```
-DetectionBoxes_Precision/mAP:          0.000259
-DetectionBoxes_Precision/mAP@.50IOU:   0.000927
-DetectionBoxes_Precision/mAP@.75IOU:   0.000113
-DetectionBoxes_Precision/mAP (small):  0.000000
-DetectionBoxes_Precision/mAP (medium): 0.000012
-DetectionBoxes_Precision/mAP (large):  0.003928
-DetectionBoxes_Recall/AR@1:            0.000090
-DetectionBoxes_Recall/AR@10:           0.002416
-DetectionBoxes_Recall/AR@100:          0.008235
-DetectionBoxes_Recall/AR@100 (small):  0.000000
-DetectionBoxes_Recall/AR@100 (medium): 0.000224
-DetectionBoxes_Recall/AR@100 (large):  0.164400
 Loss/localization_loss:                0.927825
 Loss/classification_loss:              0.699224
 Loss/regularization_loss:              2.105648
 Loss/total_loss:                       3.732696
 ```
 
-### Improve on the reference
-_This section should highlight the different strategies you adopted to improve your model. It should contain relevant figures and details of your findings._
+### Experiment0: improve on the reference
+Given the shape of the loss curve, a second experiment was performed after reducing the warmup learning rate from 0.013333 to 0.001, and after reducing the base learning rate from 0.04 to 0.005.
+```
+learning_rate {
+  cosine_decay_learning_rate {
+    learning_rate_base: 0.005
+    total_steps: 2500
+    warmup_learning_rate: 0.001
+    warmup_steps: 200
+  }
+}
+```
 
-#### Changes to learning rate in experiment0
-
-Reducing learning_rate_base reduced to 0.005.  
+*Loss function*  
+This time, the improvement in total loss remains more consistent throughout the entire training process. Especially the regularization loss and the total loss reach a final value that is far lower than in the reference experiment. 
+```
+Loss/localization_loss:                0.426503
+Loss/classification_loss:              0.236882
+Loss/regularization_loss:              0.255292
+```
 ![](/experiments/experiment0/Loss_and_learning_rate.png "")
 
-![](/experiments/experiment0/Example.png "")
-
+*Metrics*  
+The evaluation output below indicates improved model performance as well. Especially for medium and large objects model performance (both precision and recall) has improved dramatically. Much lower scores for precision and recall indicate the model still struggles with small objects. 
 ```
 Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.109
 Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.222
@@ -114,32 +170,24 @@ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.096
 Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.525
 Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.601
 ```
-Eval metrics at step 2500
-```
-DetectionBoxes_Precision/mAP:          0.109373
-DetectionBoxes_Precision/mAP@.50IOU:   0.221568
-DetectionBoxes_Precision/mAP@.75IOU:   0.100043
-DetectionBoxes_Precision/mAP (small):  0.042982
-DetectionBoxes_Precision/mAP (medium): 0.431410
-DetectionBoxes_Precision/mAP (large):  0.542174
-DetectionBoxes_Recall/AR@1:            0.026803
-DetectionBoxes_Recall/AR@10:           0.113507
-DetectionBoxes_Recall/AR@100:          0.160855
-DetectionBoxes_Recall/AR@100 (small):  0.096337
-DetectionBoxes_Recall/AR@100 (medium): 0.524813
-DetectionBoxes_Recall/AR@100 (large):  0.600800
-Loss/localization_loss:                0.426503
-Loss/classification_loss:              0.236882
-Loss/regularization_loss:              0.255292
-```
 
-* Loss seems to start to stabilize towards the end of training.
-* Large difference in mAP across small medium and large targets. This is visible in example images and inference videos.
+*Example*  
+This time the model detected some of the larger vehicles in the same example image. Final confirmation of the improved utility of the model was observed in (animations of) the three records in the test directory. These animations could not be uploaded to Github due to their size.
 
-#### Adding augmentations in experiment1
+![](/experiments/experiment0/Example.png "")
+
+### Experiment1: add augmentations to improve on experiment0
 * random horizontal flip is alread applied
 * random crop is already applied
 * [this](https://towardsdatascience.com/when-conventional-wisdom-fails-revisiting-data-augmentation-for-self-driving-cars-4831998c5509) article also references hue jitter
+* [](https://blog.roboflow.com/detect-small-objects/) cutout
+* increase image size to effectively 'dedicate more pixels' to small objects
+
+*Loss function*
+
+*Metrics*
+
+*Example*
 
 ## Other
 
@@ -150,10 +198,3 @@ Loss/regularization_loss:              0.255292
 
 ### PEP 8 style guide
 [https://peps.python.org/pep-0008/](https://peps.python.org/pep-0008/)
-
-### Annealing
-cosine_decay_learning rate:  
-global_step = min(global_step, decay_steps)  
-cosine_decay = 0.5 * (1 + cos(pi * global_step / decay_steps))  
-decayed = (1 - alpha) * cosine_decay + alpha  
-decayed_learning_rate = learning_rate * decayed  
