@@ -124,7 +124,7 @@ Although only a single image, the example below indicates that - in conditions t
 ![](/experiments/reference/Example.png "")
 
 *Other observations*  
-Finally, while rerunning the training process (using the same training data and pipeline_new.config file) consistently resulted in a model with extremely poor performance, loss values (and metrics) did vary. The regulatorization and total loss values below are much lower than the values presented above. I assume this is an artifact of a stochastic element in the training process. 
+Finally, while rerunning the training process (using the same training data and pipeline_new.config file) consistently resulted in a model with extremely poor performance, loss values (and metrics) did vary. The regulatorization and total loss values below are much lower than the values presented above. I assume this is an artifact of a stochastic element in the training process (stochastic gradient descent). 
 ```
 Loss/localization_loss:                0.927825
 Loss/classification_loss:              0.699224
@@ -176,10 +176,9 @@ This time the model detected some of the larger vehicles in the same example ima
 
 ![](/experiments/experiment0/Example.png "")
 
-### Experiment1: add augmentations to improve on experiment0
-Both the reference experiment and experiment0 already included the following two augmentations: (1) random horizontal flip, and (2) random crop. After review of [this](https://towardsdatascience.com/when-conventional-wisdom-fails-revisiting-data-augmentation-for-self-driving-cars-4831998c5509) article two more augmentations were added to improve the ability of the model to generalize:
-* hue jitter was added to help the model generalize over colors (especially vehicles can have many different colors)
-* random black patches were added to increase the (simulated) presence of obstructions that partially block objects
+### Experiment1: add hue shift to improve on experiment0
+Both the reference experiment and experiment0 already included the following two augmentations: (1) random horizontal flip, and (2) random crop. After review of [this](https://towardsdatascience.com/when-conventional-wisdom-fails-revisiting-data-augmentation-for-self-driving-cars-4831998c5509) article hue jitter was added to help the model generalize over colors (especially vehicles can have many different colors). This augmentation is expected to be beneficial for model performance, but not expected to fundamentally address the poor performance in detecting small objects. The example image below illustrates the resulting hue shift (especially visible in the sky).  
+![](/images/hue.png "hue shift")
 ```
   data_augmentation_options {
     random_horizontal_flip {
@@ -196,74 +195,93 @@ Both the reference experiment and experiment0 already included the following two
     }
   }
   data_augmentation_options {
-    random_black_patches {
-      probability: 1
-    }
-  }
-  data_augmentation_options {
     random_adjust_hue {
       max_delta: 0.5
     }
   }
 ```
 
-
-*Loss function - 4 augmentations*
+*Loss function - including hue shift*
+All reported loss values are higher than those in experiment0.
 ```
-Loss/localization_loss:                0.480923
-Loss/classification_loss:              0.328709
-Loss/regularization_loss:              0.261731
-Loss/total_loss:                       1.071363
-```
-
-*Metrics - 4 augmentations*
-```
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.066
-Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.121
-Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.066
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.018
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.249
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.303
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.014
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.067
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.102
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.054
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.294
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.373
+Loss/localization_loss:                0.501569
+Loss/classification_loss:              0.350191
+Loss/regularization_loss:              0.273898
+Loss/total_loss:                       1.125657
 ```
 
-*Loss function - 2 augmentations*
+*Metrics - including hue shift*
+All reported precision and recall values are worse than those in experiment0. This augmentation did not results in a better performing model.
 ```
-Loss/localization_loss:                0.616697
-Loss/classification_loss:              0.915548
-Loss/regularization_loss:              0.299592
-Loss/total_loss:                       1.831837
-```
-
-*Metrics - 2 augmentations*
-```
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.010
-Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.027
-Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.005
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.002
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.071
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.039
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.006
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.023
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.051
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.024
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.168
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.185
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.059      
+Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.110
+Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.058
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.017
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.216
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.292
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.013
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.059
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.095
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.051
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.274
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.350
 ```
 
-*Example*
+### Experiment2: reduce jpeg quality to improve on experiment0
+In this experiment image quality was intentionally degraded in an attempt to train using images with 'reduced information'. Objective was to improve the ability of the model to detect objects with less information. E.g. objects that are far away and represented by fewer pixels than objects that are closer by (and / or larger). The example image below illustrates the (maximum) reduction in image quality (especially visisble in the asphalt).  
+![](/images/quality.png "reduced jpeg quality")
+```
+data_augmentation_options {
+    random_horizontal_flip {
+    }
+  }
+  data_augmentation_options {
+    random_crop_image {
+      min_object_covered: 0.0
+      min_aspect_ratio: 0.75
+      max_aspect_ratio: 3.0
+      min_area: 0.75
+      max_area: 1.0
+      overlap_thresh: 0.0
+    }
+  }
+  data_augmentation_options {
+    random_jpeg_quality {
+      min_jpeg_quality: 25
+      max_jpeg_quality: 100
+    }
+  }
+```
 
-## Other
+*Loss function - including reduced jpeg quality*  
+All reported loss values are higher than those in experiment0.
+```
+Loss/localization_loss:                0.460015
+Loss/classification_loss:              0.306136
+Loss/regularization_loss:              0.265595
+Loss/total_loss:                       1.031746
+```
 
-### Git
-* git remote add origin https://github.com/alexheijnen1980/computer_vision.git  
-* git branch -M main  
-* git push -u origin main 
+*Metrics - including hue shift*  
+All reported precision and recall values are worse than those in experiment0. This augmentation did not results in a better performing model.
+```
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.075
+Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.148
+Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.071
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.023
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.325
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.336
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.020
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.092
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.135
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.075
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.475
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.549
+```
 
-### PEP 8 style guide
-[https://peps.python.org/pep-0008/](https://peps.python.org/pep-0008/)
+### Experiment3: increase number of steps to 10,000
+Since the augementations added in experiment1 and experiment2 respectively did not improve model performance, a final experiment (experiment3) was performed with the initial two augmentations only (random horizontal flip and random crop image). However, in this final experiment the total number of steps was increased by a factor 4 from 2,500 steps to 10,000 steps.  
+
+*Loss function - 10,000 steps*
+
+*Metrics - 10,000 steps*
