@@ -4,19 +4,19 @@
 Per the project introduction "objective of this project is to create a convolutional neural network to detect and classify objects using data from Waymo". Objects to be detected and classified include vehicles, pedestrians and cyclists (either stationary, or moving) in different types of urban environments. An autonomous vehicle needs to be aware of the pose, velocity and heading of different types of dynamic agents (as well as its own) to ensure safe operation in the presence of dynamic agents. More specifically, to ensure safe operation an autonomous vehicle will need to adapt its own behavior (pose, velocity and heading) in response to the current state (but also considering possible future states) of these dynamic agents. 
 
 ## Set up
-All code for this project can be downloaded from github using "git clone https://github.com/alexheijnen1980/computer_vision.git". All dependencies required to run the code in the two Jupyter Notebooks are listed in the included requirements.txt file. The workflow below should suffice to install these dependencies (on a windows machine, different commands are used to create and activate a virtual environment on MacOS):
+All code for this project can be downloaded from Github using "git clone https://github.com/alexheijnen1980/computer_vision.git". All dependencies required to run the code in the two Jupyter Notebooks are listed in the included requirements.txt file. The workflow below should suffice to install these dependencies (on a windows machine, different commands are used to create and activate a virtual environment on MacOS):
 ```
 create virtual environment: python -m venv venv
 activate virtual environment: ./venv/Scripts/Activate.ps1
 download and install dependencies: pip install -r requirements.txt
 ```
 
-Additionally, given github limits on file size, the repository does not all code to create inferences using the models referenced below. That being said, the pipeline_new.config files used to train the different models are included in the different subsfolders in the /experiments folder.
+Additionally, given Github limits on file size, the repository does not all code to create inferences using the models referenced below. That being said, the pipeline_new.config files used to train the different models are included in the different subfolders in the /experiments folder.
 
 ## Dataset
 
 ### Dataset analysis
-The dataset was analyzed in a number of different ways in the Exploratory Data Analysis Jupyter Notebook. Below, a short summary of findings is provided, additionals details and images are available in the Jupyter Notebook.
+The dataset was analyzed in a number of different ways in the Exploratory Data Analysis Jupyter Notebook. Below, a short summary of findings is provided, additional details and images are available in the Jupyter Notebook.
 
 *Qualitative Analysis*  
 Review of one image from each of the tensorflow records indicates a large variability in:
@@ -32,7 +32,7 @@ Review of one image from each of the tensorflow records indicates a large variab
 *Quantitative Analysis*  
 Quantitative analysis confirmed some of the observations made during the qualitative analysis. Different images show a large variability in the number of dynamic agents. Furthermore, the median number of vehicles is far larger than the median number of pedestrians and cyclists. The boxplot below shows variability - across 100 images per tensorflow record - in number of bounding boxes corresponding to each of the three types of dynamic agents. Large differences exist in the median number of vehicles (15), pedestrians (1) and cyclists (0)
 ![](/images/agent_boxplot.png "variability in number of agents per image")  
-Next, the bar chart below shows the frequency of bounding boxes (dynamic agents) grouped according to location of the center of the bounding box (mapped to one of the four quadrants of the image). The print out expresses similar information in percentages that are further split up by dynamic agent type. Almost 60% of bounding boxes have a center in the bottom half of the image and designate the presence of a vehicle. This is likely due to the fact that often  (a portion of) the top half of the image is taken up by the horizon. 
+Next, the bar chart below shows the frequency of bounding boxes (dynamic agents) grouped according to location of the center of the bounding box (mapped to one of the four quadrants of the image). The print out expresses similar information in percentages that are further split up by dynamic agent type. Almost 60% of bounding boxes have a center in the bottom half of the image and designate the presence of a vehicle. This is likely due to the fact that often (a portion of) the top half of the image is taken up by the horizon. 
 ![](/images/location.png "variability in location of bounding box center")
 ```
 Percentage of bounding boxes grouped by class and center location: 
@@ -52,7 +52,7 @@ vehicle     bottom left     35.409997
 ```
 
 ### Cross-validation
-Given that more than 10,000 images are available across all tensorflow records, 90% of the tensorflow records are assigned to the training set and 'only' 10% of the tensorflow records are assigned to the valiation set (rather than the 80/20% rule of thumb). Furthermore, the training set and the validation set are split at the level of tensorflow records (trip id), rather than at the level of images. A tensorflow record is only part of the training set, or the validation set, never of both. This is done to prevent too much similarity between the training set and the validation set.
+Given that more than 10,000 images are available across all tensorflow records, 90% of the tensorflow records are assigned to the training set and 'only' 10% of the tensorflow records are assigned to the validation set (rather than the 80/20% rule of thumb). Furthermore, the training set and the validation set are split at the level of tensorflow records (trip id), rather than at the level of images. A tensorflow record is only part of the training set, or the validation set, never of both. This is done to prevent too much similarity between the training set and the validation set.
 
 ## Training
 ### Reference experiment  
@@ -124,7 +124,7 @@ Although only a single image, the example below indicates that - in conditions t
 ![](/experiments/reference/Example.png "")
 
 *Other observations*  
-Finally, while rerunning the training process (using the same training data and pipeline_new.config file) consistently resulted in a model with extremely poor performance, loss values (and metrics) did vary. The regulatorization and total loss values below are much lower than the values presented above. I assume this is an artifact of a stochastic element in the training process (stochastic gradient descent). 
+Finally, while rerunning the training process (using the same training data and pipeline_new.config file) consistently resulted in a model with extremely poor performance, loss values (and metrics) did vary. The regularization and total loss values below are much lower than the values presented above. I assume this is an artifact of a stochastic element in the training process (stochastic gradient descent). 
 ```
 Loss/localization_loss:                0.927825
 Loss/classification_loss:              0.699224
@@ -211,7 +211,7 @@ Loss/total_loss:                       1.125657
 ```
 
 *Metrics - including hue shift*
-All reported precision and recall values are worse than those in experiment0. This augmentation did not results in a better performing model.
+All reported precision and recall values are worse than those in experiment0. This augmentation did not result in a better performing model.
 ```
 Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.059      
 Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.110
@@ -228,7 +228,7 @@ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.350
 ```
 
 ### Experiment2: reduce jpeg quality to improve on experiment0
-In this experiment image quality was intentionally degraded in an attempt to train using images with 'reduced information'. Objective was to improve the ability of the model to detect objects with less information. E.g. objects that are far away and represented by fewer pixels than objects that are closer by (and / or larger). The example image below illustrates the (maximum) reduction in image quality (especially visisble in the asphalt).  
+In this experiment image quality was intentionally degraded in an attempt to train using images with 'reduced information'. Objective was to improve the ability of the model to detect objects with less information. E.g. objects that are far away and represented by fewer pixels than objects that are closer by (and / or larger). The example image below illustrates the (maximum) reduction in image quality (especially visible in the asphalt).  
 ![](/images/quality.png "reduced jpeg quality")
 ```
 data_augmentation_options {
@@ -263,7 +263,7 @@ Loss/total_loss:                       1.031746
 ```
 
 *Metrics - including hue shift*  
-All reported precision and recall values are worse than those in experiment0. This augmentation did not results in a better performing model.
+All reported precision and recall values are worse than those in experiment0. This augmentation did not result in a better performing model.
 ```
 Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.075
 Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.148
@@ -279,9 +279,40 @@ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.475
 Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.549
 ```
 
-### Experiment3: increase number of steps to 10,000
-Since the augementations added in experiment1 and experiment2 respectively did not improve model performance, a final experiment (experiment3) was performed with the initial two augmentations only (random horizontal flip and random crop image). However, in this final experiment the total number of steps was increased by a factor 4 from 2,500 steps to 10,000 steps.  
+### Experiment3: increase number of steps to 6,000
+Since the augmentations added in experiment1 and experiment2 respectively did not improve model performance, a final experiment (experiment3) was performed with the initial two augmentations only (random horizontal flip and random crop image). However, in this final experiment the total number of steps was increased from 2,500 steps to 6,000 steps.  
 
-*Loss function - 10,000 steps*
+*Loss function - 6,000 steps* 
+All reported loss values are very slightly better than those in experiment0. 
+```
+Loss/localization_loss:                0.402373
+Loss/classification_loss:              0.236331
+Loss/regularization_loss:              0.255268
+Loss/total_loss:                       0.893973
+```
 
-*Metrics - 10,000 steps*
+![](/experiments/experiment3/Loss_and_learning_rate.png "")
+
+*Metrics - 6,000 steps*  
+All but one of the reported precision and recall values are better than those in experiment0. That being said, the improvements seem very small and the largest deficiency of the model - detection of small objects - remains.
+```
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.113
+Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.223
+Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.102
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.045
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.435
+Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.593
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.026
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.119
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.170
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.106
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.531
+Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.630
+```
+![](/experiments/experiment3/Example.png "")
+
+## Conclusion  
+Even though a model was successfully trained, it proved difficult to improve upon the performance of the initial model. As is, even the performance of the model from experiment3 does not seem like it would be sufficient to safely operate around dynamic agents. I can think of a number of different ways to address this problem:
+* improve model performance in different ways than investigated above, including selection of a different model architecture
+* leverage additional sensing modalities (e.g. radar, lidar) and sensor fusion to further improve perception performance
+* improve image resolution above 640 x 640 pixels to improve 'information density' for objects in the distance
